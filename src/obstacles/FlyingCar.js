@@ -1,4 +1,3 @@
-// src/obstacles/FlyingCar.js
 import { mat4 } from 'https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js';
 
 // Evaluate a cubic Bézier at parameter t ∈ [0,1]

@@ -1,4 +1,3 @@
-// src/game/MissionManager.js
 import { mat4 } from 'https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js';
 
 const PICKUP_RADIUS  = 5.0;   // metres — how close to trigger pickup
@@ -32,7 +31,7 @@ export class MissionManager {
   onDeliver(fn) { this._onDeliver = fn; }
   onFail(fn)    { this._onFail    = fn; }
 
-  // ── Spawn ────────────────────────────────────────────────────────
+  // Spawn
 
   _spawnMission() {
     const picks = this._randomPair();
@@ -56,7 +55,7 @@ export class MissionManager {
     return [shuffled[0], shuffled[1]];
   }
 
-  // ── Per-frame ────────────────────────────────────────────────────
+  // Per-frame
 
   update(dt, dronePos, weatherState) {
     this._phase      += dt * 2.5;
@@ -95,7 +94,7 @@ export class MissionManager {
     }
   }
 
-  // ── Draw ─────────────────────────────────────────────────────────
+  // Draw
 
   draw(gl, program, cubeGeo) {
     const pulse = 0.7 + Math.sin(this._phase) * 0.3;

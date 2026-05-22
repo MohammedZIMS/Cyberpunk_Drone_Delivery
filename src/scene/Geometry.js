@@ -1,5 +1,3 @@
-// src/scene/Geometry.js
-
 export function createCubeGeometry(gl) {
   // 8 corners of a unit cube (-0.5 to +0.5 on all axes)
   // Each vertex: [x, y, z,  nx, ny, nz]  (position + normal)

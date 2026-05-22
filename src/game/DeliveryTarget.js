@@ -31,14 +31,12 @@ export class DeliveryTarget {
 
     this._pulse = Math.random() * Math.PI * 2;
 
-    // ── hover system ─────────────────────────────
+    // hover system 
     this._hoverTimer = 0;
     this._isHovering  = false;
   }
 
-  // ─────────────────────────────────────────────
   // SIMPLE DIST (same style as MissionManager)
-  // ─────────────────────────────────────────────
   dist(a, b) {
     const dx = a[0] - b[0];
     const dy = a[1] - b[1];
@@ -46,14 +44,7 @@ export class DeliveryTarget {
     return Math.sqrt(dx*dx + dy*dy + dz*dz);
   }
 
-  // ─────────────────────────────────────────────
   // GAME LOGIC
-  // ─────────────────────────────────────────────
-
-  /**
-   * dronePos: [x,y,z]
-   * droneVel: from DronePhysics.velocity
-   */
   update(dt, dronePos, droneVel) {
     this._pulse += dt * 3.0;
 
@@ -84,9 +75,7 @@ export class DeliveryTarget {
     return false;
   }
 
-  // ─────────────────────────────────────────────
   // STATE CHANGES
-  // ─────────────────────────────────────────────
 
   collect() {
     this.state = STATES.COLLECTED;
@@ -105,9 +94,7 @@ export class DeliveryTarget {
     this._hoverTimer = 0;
   }
 
-  // ─────────────────────────────────────────────
   // RENDER
-  // ─────────────────────────────────────────────
 
   draw(gl, program, cubeGeo) {
     if (this.state === STATES.DELIVERED) return;
@@ -165,9 +152,7 @@ export class DeliveryTarget {
     );
   }
 
-  // ─────────────────────────────────────────────
   // HUD HELPERS
-  // ─────────────────────────────────────────────
 
   getHoverProgress() {
     return Math.min(this._hoverTimer / HOVER_TIME, 1.0);

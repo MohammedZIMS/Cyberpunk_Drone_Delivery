@@ -1,4 +1,3 @@
-// src/obstacles/Billboard.js
 import { mat4 } from 'https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js';
 
 const BILLBOARD_COLORS = [

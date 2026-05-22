@@ -1,4 +1,3 @@
-// src/obstacles/ObstacleManager.js
 import { FlyingCar }   from './FlyingCar.js';
 import { ElectricWire } from './ElectricWire.js';
 import { Billboard }   from './Billboard.js';

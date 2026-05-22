@@ -1,17 +1,3 @@
-/**
- * CollisionDetector.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Two-phase collision detection:
- *
- *   Broad phase  — cheap radius check to discard distant objects.
- *   Narrow phase — accurate AABB overlap + penetration depth for survivors.
- *
- * Also handles capsule (point-to-segment) tests for electric wires.
- *
- * Concept covered: broad/narrow phase, minimum penetration axis resolution,
- *                  point-to-line-segment distance, collision normal.
- */
-
 import { AABB } from './AABB.js';
 
 /** Only test objects whose centre is within this radius of the drone. */

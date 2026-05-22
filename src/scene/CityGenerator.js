@@ -1,4 +1,3 @@
-// src/scene/CityGenerator.js
 import { Building } from './Building.js';
 
 export class CityGenerator {

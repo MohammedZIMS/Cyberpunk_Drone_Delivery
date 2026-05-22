@@ -1,18 +1,4 @@
-/**
- * NeonGlow.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Three-pass bloom pipeline:
- *   Pass 1 — scene rendered to a framebuffer object (FBO)
- *   Pass 2 — brightness extraction (pixels above a luminance threshold)
- *   Pass 3 — separable Gaussian blur (3 horizontal + 3 vertical iterations)
- *   Final  — composite: scene + blurred bloom → canvas
- *
- * Concept covered: framebuffer objects, render-to-texture, post-processing,
- *                  Gaussian blur, HDR bloom, fullscreen quad.
- */
-
 // ── Embedded GLSL shaders for post-processing ─────────────────────────────
-
 const QUAD_VERT = `
 attribute vec2 aPosition;
 varying   vec2 vUV;

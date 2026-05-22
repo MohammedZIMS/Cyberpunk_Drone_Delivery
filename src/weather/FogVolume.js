@@ -1,5 +1,3 @@
-// src/weather/FogVolume.js
-
 export class FogVolume {
   constructor() {
     this._density     = 0.002;   // current (smoothed) density

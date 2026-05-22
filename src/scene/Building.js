@@ -1,4 +1,3 @@
-// src/scene/Building.js
 import { mat4 } from 'https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js';
 
 export class Building {
@@ -15,13 +14,12 @@ export class Building {
       [1.0, 0.0, 0.6],   // magenta
       [0.4, 0.0, 1.0],   // purple
       [1.0, 0.5, 0.0],   // amber
-      [0.0, 0.9, 1.0],   //  blue
+      [0.0, 0.8, 1.0],   // sky blue
     ];
     this.color = palette[Math.floor(Math.random() * palette.length)];
     this.modelMatrix = mat4.create();
     this._buildMatrix();
   }
-
 
   _buildMatrix() {
     mat4.identity(this.modelMatrix);

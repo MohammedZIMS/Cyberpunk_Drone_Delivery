@@ -1,5 +1,3 @@
-// src/weather/RainParticles.js
-
 const MAX_PARTICLES = 4000;
 
 // Vertex shader for rain: each particle is a seed → GPU computes position

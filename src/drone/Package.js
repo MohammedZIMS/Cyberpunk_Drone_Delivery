@@ -1,13 +1,3 @@
-// src/game/Package.js
-//
-// Handles:
-//  • Pickup / dropoff cargo gameplay
-//  • Package carrying state
-//  • Delivery zones
-//  • Cargo HUD updates
-//  • Simple package rendering
-//
-
 import { mat4 } from 'https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js';
 
 const PICKUP_RADIUS   = 6;
@@ -33,10 +23,8 @@ export class Package {
     this._updateHUD();
   }
 
-  // ─────────────────────────────────────────
-  // CREATE NEW DELIVERY
-  // ─────────────────────────────────────────
 
+  // CREATE NEW DELIVERY
   _generateMission() {
     const start =
       this.buildings[
@@ -73,9 +61,7 @@ export class Package {
     this.delivered  = false;
   }
 
-  // ─────────────────────────────────────────
   // UPDATE
-  // ─────────────────────────────────────────
 
   update(dt, dronePos) {
     if (this.delivered) return;
@@ -130,9 +116,7 @@ export class Package {
     }
   }
 
-  // ─────────────────────────────────────────
   // DRAW
-  // ─────────────────────────────────────────
 
   draw(gl, program, cubeGeometry) {
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeGeometry.vbo);
@@ -168,9 +152,7 @@ export class Package {
       12
     );
 
-    // ────────────────────────
     // Pickup crate
-    // ────────────────────────
 
     if (!this.hasPackage) {
       this._drawCube(
@@ -182,9 +164,7 @@ export class Package {
       );
     }
 
-    // ────────────────────────
     // Dropoff marker
-    // ────────────────────────
 
     if (this.hasPackage && !this.delivered) {
       this._drawCube(
@@ -240,9 +220,7 @@ export class Package {
     );
   }
 
-  // ─────────────────────────────────────────
   // HELPERS
-  // ─────────────────────────────────────────
 
   _distance(a, b) {
     const dx = a[0] - b[0];
@@ -268,9 +246,8 @@ export class Package {
         : 'WAITING';
   }
 
-  // ─────────────────────────────────────────
+
   // API
-  // ─────────────────────────────────────────
 
   isCarrying() {
     return this.hasPackage;

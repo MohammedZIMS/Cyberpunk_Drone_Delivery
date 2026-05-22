@@ -1,4 +1,3 @@
-// src/drone/Drone.js  (full replacement)
 import { mat4 } from 'https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js';
 import { DronePhysics } from './DronePhysics.js';
 

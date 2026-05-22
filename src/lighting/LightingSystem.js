@@ -1,12 +1,3 @@
-/**
- * LightingSystem.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Assigns neon point lights to the tallest buildings and uploads them to the
- * GPU as flat uniform arrays (WebGL 1 doesn't support struct arrays).
- *
- * Concept covered: point lights, attenuation, uniform array upload.
- */
-
 const MAX_LIGHTS = 32;
 
 const NEON_COLORS = [

@@ -27,13 +27,426 @@
       height: 100vh;
     }
 
-    /* screen effects – kept for atmosphere */
+    /* ─── HUD OVERLAY ─── */
+    #hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      font-family: 'Share Tech Mono', monospace;
+      color: #00ffcc;
+    }
+
+    /* corner brackets */
+    #hud::before,
+    #hud::after {
+      content: '';
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-color: #00ffcc44;
+      border-style: solid;
+    }
+
+    #hud::before {
+      top: 10px;
+      left: 10px;
+      border-width: 2px 0 0 2px;
+    }
+
+    #hud::after {
+      top: 10px;
+      right: 10px;
+      border-width: 2px 2px 0 0;
+    }
+
+    /* top-left stats */
+    #hud-tl {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .hud-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .hud-label {
+      color: #00ffcc88;
+      font-size: 9px;
+    }
+
+    .hud-val {
+      color: #00ffcc;
+      font-size: 13px;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    #hp-bar-wrap {
+      width: 100px;
+      height: 6px;
+      background: #00ffcc22;
+      border: 1px solid #00ffcc44;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    #hp-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #00ffcc, #00ff88);
+      transition: width .3s, background .3s;
+    }
+
+    /* top-right weather */
+    #hud-tr {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    /* bottom-left speed */
+    #hud-bl {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+    }
+
+    #speedometer {
+      width: 100px;
+      height: 100px;
+      border: 2px solid #00ffcc44;
+      border-radius: 50%;
+      background: radial-gradient(circle, #00ffcc0a 0%, transparent 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+    }
+
+    #speed-val {
+      font-size: 20px;
+      font-family: 'Orbitron', sans-serif;
+      color: #00ffcc;
+    }
+
+    #speed-unit {
+      font-size: 8px;
+      color: #00ffcc88;
+      letter-spacing: 2px;
+    }
+
+    .speed-ring {
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: #00ffcc;
+      animation: spin-speed 2s linear infinite;
+      opacity: .3;
+    }
+
+    @keyframes spin-speed {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* bottom-right mini-map */
+    #hud-br {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+    }
+
+    #minimap {
+      width: 150px;
+      height: 150px;
+      border: 1px solid #00ffcc44;
+      background: #00ffcc08;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #minimap canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    #minimap-label {
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: #00ffcc66;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    /* mission panel */
+    #mission-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #000000cc;
+      border: 1px solid #00ffcc44;
+      padding: 20px 40px;
+      text-align: center;
+      display: none;
+      backdrop-filter: blur(10px);
+    }
+
+    #mission-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+      color: #00ffcc;
+      margin-bottom: 8px;
+    }
+
+    #mission-sub {
+      font-size: 11px;
+      color: #00ffcc88;
+      letter-spacing: 2px;
+    }
+
+    /* delivery timer */
+    #timer-panel {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      display: none;
+    }
+
+    #timer-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      color: #ffcc00;
+      text-shadow: 0 0 20px #ffcc0088;
+    }
+
+    #timer-label {
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: #ffcc0066;
+    }
+
+    /* score */
+    #score-panel {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    #score-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      color: #ff00ff;
+      text-shadow: 0 0 15px #ff00ff88;
+    }
+
+    #score-label {
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: #ff00ff66;
+    }
+
+    /* package indicator */
+    #pkg-panel {
+      position: absolute;
+      bottom: 130px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #pkg-icon {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #ffcc00;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #ffcc00;
+    }
+
+    #pkg-text {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #ffcc0088;
+    }
+
+    /* compass */
+    #compass {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 50px;
+      width: 200px;
+      height: 20px;
+      background: #00000088;
+      border: 1px solid #00ffcc22;
+      overflow: hidden;
+    }
+
+    #compass-tape {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      white-space: nowrap;
+      font-size: 9px;
+      letter-spacing: 6px;
+      color: #00ffcc66;
+      transition: left .1s;
+    }
+
+    #compass-center {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 100%;
+      background: #00ffcc;
+    }
+
+    /* crosshair */
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .ch-h {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 16px;
+      height: 1px;
+      background: #00ffcc88;
+      transform: translate(-50%, -50%);
+    }
+
+    .ch-v {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 1px;
+      height: 16px;
+      background: #00ffcc88;
+      transform: translate(-50%, -50%);
+    }
+
+    .ch-dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 3px;
+      height: 3px;
+      background: #00ffcc;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* camera mode */
+    #cam-mode {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: #00ffcc44;
+    }
+
+    /* flash overlay */
+    #hit-flash {
+      position: absolute;
+      inset: 0;
+      background: #ff000000;
+      pointer-events: none;
+      transition: background .1s;
+    }
+
+    /* controls hint */
+    #controls-hint {
+      position: absolute;
+      bottom: 180px;
+      right: 20px;
+      font-size: 9px;
+      color: #00ffcc33;
+      line-height: 1.8;
+      text-align: right;
+      letter-spacing: 1px;
+    }
+
+    /* pause */
+    #pause-overlay {
+      position: absolute;
+      inset: 0;
+      background: #000000cc;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      backdrop-filter: blur(20px);
+      pointer-events: all;
+    }
+
+    #pause-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 48px;
+      color: #00ffcc;
+      letter-spacing: 8px;
+      text-shadow: 0 0 40px #00ffcc, 0 0 80px #00ffcc44;
+    }
+
+    .pause-btn {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      letter-spacing: 4px;
+      background: transparent;
+      border: 1px solid #00ffcc44;
+      color: #00ffcc;
+      padding: 12px 40px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all .2s;
+    }
+
+    .pause-btn:hover {
+      background: #00ffcc22;
+      border-color: #00ffcc;
+      box-shadow: 0 0 20px #00ffcc44;
+    }
+
+    /* screen effects */
     #scanlines {
       position: absolute;
       inset: 0;
       pointer-events: none;
       background: repeating-linear-gradient(0deg, transparent, transparent 2px, #00000008 2px, #00000008 4px);
-      z-index: 5;
     }
 
     #vignette {
@@ -41,16 +454,42 @@
       inset: 0;
       pointer-events: none;
       background: radial-gradient(ellipse at center, transparent 50%, #000000aa 100%);
-      z-index: 5;
     }
 
-    #hit-flash {
+    /* delivery complete */
+    #delivery-complete {
       position: absolute;
-      inset: 0;
-      background: #ff000000;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
       pointer-events: none;
-      transition: background .1s;
-      z-index: 15;
+      display: none;
+    }
+
+    #dc-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 36px;
+      color: #00ff88;
+      letter-spacing: 4px;
+      animation: glow-pulse 1s ease-in-out infinite alternate;
+    }
+
+    #dc-score {
+      font-size: 14px;
+      color: #00ff8888;
+      margin-top: 8px;
+      letter-spacing: 3px;
+    }
+
+    @keyframes glow-pulse {
+      from {
+        text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff8844;
+      }
+
+      to {
+        text-shadow: 0 0 40px #00ff88, 0 0 80px #00ff8888;
+      }
     }
   </style>
 </head>
@@ -62,6 +501,129 @@
   <div id="scanlines"></div>
   <div id="vignette"></div>
   <div id="hit-flash"></div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <!-- Top Left -->
+    <div id="hud-tl">
+      <div class="hud-row">
+        <span class="hud-label">ALT</span>
+        <span class="hud-val" id="hud-alt">000</span>
+        <span class="hud-label">m</span>
+      </div>
+      <div class="hud-row">
+        <span class="hud-label">HP</span>
+        <div id="hp-bar-wrap">
+          <div id="hp-bar" style="width:100%"></div>
+        </div>
+        <span class="hud-val" style="font-size:11px" id="hud-hp">100</span>
+      </div>
+      <div class="hud-row" style="margin-top:4px">
+        <span class="hud-label">STATUS</span>
+        <span id="hud-status" style="font-size:10px;color:#00ff88">NOMINAL</span>
+      </div>
+    </div>
+
+    <!-- Top Right -->
+    <div id="hud-tr">
+      <div class="hud-row" style="justify-content:flex-end">
+        <span class="hud-label">WEATHER</span>
+        <span class="hud-val" style="font-size:11px" id="hud-weather">CLEAR</span>
+      </div>
+      <div class="hud-row" style="justify-content:flex-end">
+        <span class="hud-label">WIND</span>
+        <span id="hud-wind" style="font-size:11px">0.0 m/s</span>
+      </div>
+      <div class="hud-row" style="justify-content:flex-end">
+        <span class="hud-label">TIME</span>
+        <span id="hud-time" style="font-size:11px">--:--</span>
+      </div>
+    </div>
+
+    <!-- Score -->
+    <div id="score-panel">
+      <div id="score-val">0</div>
+      <div id="score-label">SCORE</div>
+    </div>
+
+    <!-- Compass -->
+    <div id="compass">
+      <div id="compass-center"></div>
+      <div id="compass-tape">W...WNW...NW...NNW...N...NNE...NE...ENE...E...ESE...SE...SSE...S...SSW...SW...WSW...W</div>
+    </div>
+
+    <!-- Delivery Timer -->
+    <div id="timer-panel">
+      <div id="timer-val">60</div>
+      <div id="timer-label">DELIVERY TIMER</div>
+    </div>
+
+    <!-- Package -->
+    <div id="pkg-panel">
+      <div id="pkg-icon">📦</div>
+      <div id="pkg-text">NO PACKAGE</div>
+    </div>
+    <div class="hud-row">
+      <span>PACKAGE</span>
+      <span id="hud-pkg">WAITING</span>
+    </div>
+
+    <!-- Bottom Left - Speedometer -->
+    <div id="hud-bl">
+      <div id="speedometer">
+        <div class="speed-ring"></div>
+        <div id="speed-val">0</div>
+        <div id="speed-unit">KM/H</div>
+      </div>
+    </div>
+
+    <!-- Bottom Right - Minimap -->
+    <div id="hud-br">
+      <div id="minimap">
+        <canvas id="minimap-canvas" width="150" height="150"></canvas>
+      </div>
+      <div id="minimap-label">TACTICAL MAP</div>
+    </div>
+
+    <!-- Camera mode -->
+    <div id="cam-mode">CAM: CHASE</div>
+
+    <!-- Crosshair -->
+    <div id="crosshair">
+      <div class="ch-h"></div>
+      <div class="ch-v"></div>
+      <div class="ch-dot"></div>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls-hint">
+      WASD · MOVE<br>
+      Q/E · UP/DOWN<br>
+      MOUSE · LOOK<br>
+      F · CAMERA<br>
+      P · PAUSE<br>
+      SPACE · INTERACT
+    </div>
+  </div>
+
+  <!-- Mission Panel -->
+  <div id="mission-panel">
+    <div id="mission-title">NEW MISSION</div>
+    <div id="mission-sub">PICKUP PACKAGE AT TOWER A</div>
+  </div>
+
+  <!-- Delivery Complete -->
+  <div id="delivery-complete">
+    <div id="dc-title">DELIVERY COMPLETE</div>
+    <div id="dc-score">+500 CREDITS</div>
+  </div>
+
+  <!-- Pause -->
+  <div id="pause-overlay" id="pause-overlay">
+    <div id="pause-title">PAUSED</div>
+    <button class="pause-btn" id="resume-btn">RESUME</button>
+    <button class="pause-btn" id="restart-btn">RESTART</button>
+  </div>
 
   <script type="module" src="main.js"></script>
 </body>

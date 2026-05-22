@@ -1,12 +1,4 @@
-
-
-/**
- * Compile a single shader of the given type.
- * @param {WebGLRenderingContext} gl
- * @param {number} type   gl.VERTEX_SHADER | gl.FRAGMENT_SHADER
- * @param {string} source GLSL source string
- * @returns {WebGLShader}
- */
+// Compile a single shader of the given type.
 function compileShader(gl, type, source) {
   const shader = gl.createShader(type);
   gl.shaderSource(shader, source);
@@ -23,13 +15,8 @@ function compileShader(gl, type, source) {
   return shader;
 }
 
-/**
- * Build a complete shader program from source strings.
- * @param {WebGLRenderingContext} gl
- * @param {string} vertSrc  GLSL vertex shader source
- * @param {string} fragSrc  GLSL fragment shader source
- * @returns {WebGLProgram | null}
- */
+// Build a complete shader program from source strings.
+ 
 export function createShaderProgram(gl, vertSrc, fragSrc) {
   const vert = compileShader(gl, gl.VERTEX_SHADER,   vertSrc);
   const frag = compileShader(gl, gl.FRAGMENT_SHADER, fragSrc);
@@ -53,7 +40,7 @@ export function createShaderProgram(gl, vertSrc, fragSrc) {
   return program;
 }
 
-// ── Uniform upload helpers ─────────────────────────────────────────────────
+// Uniform upload helpers 
 // These avoid the boilerplate of gl.getUniformLocation every call.
 
 export function setUniform1f(gl, prog, name, v)       { gl.uniform1f(gl.getUniformLocation(prog, name), v); }

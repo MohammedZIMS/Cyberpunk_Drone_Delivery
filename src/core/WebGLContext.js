@@ -16,7 +16,7 @@ export function initWebGL(canvasId) {
     return null;
   }
 
-  // ── Default GL state ────────────────────────────────────────────────────
+  // Default GL state
 
   // Enable the depth buffer so closer fragments overwrite farther ones
   gl.enable(gl.DEPTH_TEST);
@@ -32,7 +32,7 @@ export function initWebGL(canvasId) {
   // Set initial viewport
   gl.viewport(0, 0, canvas.width, canvas.height);
 
-  // ── Resize handler ──────────────────────────────────────────────────────
+  // Resize handler
   window.addEventListener('resize', () => {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;

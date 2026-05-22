@@ -1,10 +1,10 @@
 import { mat4, vec3 } from 'https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js';
 
-/** How far the camera trails behind the drone (world units). */
+// How far the camera trails behind the drone (world units).
 const FOLLOW_DISTANCE = 14;
-/** How far above the drone the camera sits. */
+// How far above the drone the camera sits.
 const FOLLOW_HEIGHT   = 6;
-/** Lerp speed — higher = snappier camera, lower = more cinematic lag. */
+// Lerp speed — higher = snappier camera, lower = more cinematic lag.
 const LERP_SPEED      = 5;
 
 export class Camera {
@@ -27,14 +27,9 @@ export class Camera {
     });
   }
 
-  // ── Per-frame update ─────────────────────────────────────────────────────
+  // Per-frame update
 
-  /**
-   * Move the camera to trail behind the drone.
-   * @param {number[]} dronePos  [x, y, z]
-   * @param {number}   droneYaw  radians
-   * @param {number}   dt        delta-time in seconds
-   */
+  
   follow(dronePos, droneYaw, dt) {
     // Desired camera position: behind and slightly above the drone
     const cosY = Math.cos(droneYaw);
@@ -54,16 +49,16 @@ export class Camera {
     this.target   = vec3.fromValues(dronePos[0], dronePos[1], dronePos[2]);
   }
 
-  // ── Matrix getters ───────────────────────────────────────────────────────
+  // Matrix getters
 
-  /** Build and return the view matrix (world → camera space). */
+  // Build and return the view matrix (world → camera space). 
   getViewMatrix() {
     const m = mat4.create();
     mat4.lookAt(m, this.position, this.target, this.up);
     return m;
   }
 
-  /** Build and return the projection matrix (camera → clip space). */
+  // Build and return the projection matrix (camera → clip space).
   getProjectionMatrix() {
     const m = mat4.create();
     mat4.perspective(m, this.fovRad, this.aspect, this.near, this.far);
