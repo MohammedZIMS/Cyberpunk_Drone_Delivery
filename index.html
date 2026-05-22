@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyberpunk Drone Delivery Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    #glCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* screen effects – kept for atmosphere */
+    #scanlines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, #00000008 2px, #00000008 4px);
+      z-index: 5;
+    }
+
+    #vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 50%, #000000aa 100%);
+      z-index: 5;
+    }
+
+    #hit-flash {
+      position: absolute;
+      inset: 0;
+      background: #ff000000;
+      pointer-events: none;
+      transition: background .1s;
+      z-index: 15;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="glCanvas"></canvas>
+
+  <!-- Screen FX -->
+  <div id="scanlines"></div>
+  <div id="vignette"></div>
+  <div id="hit-flash"></div>
+
+  <script type="module" src="main.js"></script>
+</body>
+
+</html>
