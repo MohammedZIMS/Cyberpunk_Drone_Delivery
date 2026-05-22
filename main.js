@@ -28,6 +28,7 @@ import { ExplosionFX }        from './src/game/ExplosionFX.js';
 
 import { AudioManager }       from './src/audio/AudioManager.js';
 import { ScreenManager }      from './src/ui/ScreenManager.js';
+import { TacticalMap }        from './src/ui/tactical/TacticalMap.js';
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
@@ -94,6 +95,25 @@ async function init() {
   // ── Core game systems ──────────────────────────────────────────────────
   const score    = new ScoreSystem();
   const camera   = new Camera(canvas);
+
+  // ── Tactical Map — created once, persists across restarts ─────────────
+  // FIX: canvas.getContext('2d') was never called in the original code.
+  // TacticalMap owns the 2D context independently of WebGL.
+  const tacticalMap = new TacticalMap(
+    document.getElementById('minimap-canvas'),
+    city.buildings,
+    { worldRadius: 260, canvasSize: 150 }
+  );
+
+  // Wire zoom buttons
+  document.getElementById('map-zoom-in')?.addEventListener('click', () => {
+    const z = Math.min(4.0, (tacticalMap._zoom || 1.0) * 1.4);
+    tacticalMap.setZoom(z);
+  });
+  document.getElementById('map-zoom-out')?.addEventListener('click', () => {
+    const z = Math.max(0.4, (tacticalMap._zoom || 1.0) / 1.4);
+    tacticalMap.setZoom(z);
+  });
 
   // ── Show start screen ──────────────────────────────────────────────────
   screen.showStart(score.getHighScore());
@@ -236,6 +256,16 @@ async function init() {
     // No physics, no score, no camera movement.
     if (!gameState || gameState.isPaused) {
       renderScene();
+      // FIX: tactical map still animates its scan-line and markers while
+      // paused — no gameplay data changes, but the visual keeps running.
+      if (drone && mission) {
+        const dp = drone.getPosition();
+        tacticalMap.update(dt, dp, drone.getYaw(), {
+          state:      mission.getState(),
+          pickupPos:  mission.getPickupPos(),
+          dropoffPos: mission.getDropoffPos(),
+        });
+      }
       return;
     }
 
@@ -319,6 +349,16 @@ async function init() {
       mission:       mission.getState(),
       timeRemaining: gameState.getTimeRemaining(),
       yaw:           drone.getYaw(),   // compass always has a fresh value
+    });
+
+    // ── Tactical Map — updated EVERY active frame ─────────────────────
+    // FIX: completely independent of weather/WebGL state. Uses its own
+    // 2D canvas context. Passes pickup/dropoff world positions so markers
+    // are placed correctly (the original only passed mission state string).
+    tacticalMap.update(dt, dronePos, drone.getYaw(), {
+      state:      mission.getState(),
+      pickupPos:  mission.getPickupPos(),
+      dropoffPos: mission.getDropoffPos(),
     });
   }
 

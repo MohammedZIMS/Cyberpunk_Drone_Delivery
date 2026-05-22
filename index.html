@@ -164,33 +164,103 @@
       }
     }
 
-    /* bottom-right mini-map */
+    /* ═══ TACTICAL MAP ═══════════════════════════════════════════════ */
     #hud-br {
       position: absolute;
-      bottom: 20px;
-      right: 20px;
+      bottom: 16px;
+      right: 16px;
+      user-select: none;
     }
 
-    #minimap {
-      width: 150px;
-      height: 150px;
-      border: 1px solid #00ffcc44;
-      background: #00ffcc08;
+    /* Outer wrapper — neon glow border */
+    #minimap-wrap {
       position: relative;
+      width: 162px;
+      height: 162px;
+    }
+
+    /* Circular clip so the canvas looks like a radar scope */
+    #minimap {
+      width:  150px;
+      height: 150px;
+      border-radius: 50%;
       overflow: hidden;
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      /* Box-shadow creates the neon ring glow without adding DOM elements */
+      box-shadow:
+        0 0  8px  2px rgba(0,255,204,0.30),
+        0 0 24px  4px rgba(0,255,204,0.12),
+        inset 0 0 16px    rgba(0,255,204,0.06);
     }
 
+    /* The actual canvas fills the circular container */
     #minimap canvas {
-      width: 100%;
-      height: 100%;
+      display: block;
+      width:  150px;
+      height: 150px;
+      image-rendering: pixelated;
     }
 
+    /* Corner bracket decorations — pure CSS, zero extra DOM */
+    #minimap-wrap::before,
+    #minimap-wrap::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-color: #00ffcc88;
+      border-style: solid;
+    }
+    #minimap-wrap::before {
+      top: 0; left: 0;
+      border-width: 2px 0 0 2px;
+    }
+    #minimap-wrap::after {
+      bottom: 0; right: 0;
+      border-width: 0 2px 2px 0;
+    }
+
+    /* Label beneath the map */
     #minimap-label {
-      font-size: 8px;
+      font-size:     7px;
       letter-spacing: 3px;
-      color: #00ffcc66;
-      text-align: center;
-      margin-top: 2px;
+      color:          #00ffcc55;
+      text-align:     center;
+      margin-top:     4px;
+      text-transform: uppercase;
+      font-family:    'Orbitron', monospace;
+    }
+
+    /* Zoom controls */
+    #minimap-zoom {
+      position:   absolute;
+      top:        6px;
+      right:      0px;
+      display:    flex;
+      flex-direction: column;
+      gap:        3px;
+    }
+
+    .map-zoom-btn {
+      width:        14px;
+      height:       14px;
+      background:   rgba(0,255,204,0.08);
+      border:       1px solid #00ffcc44;
+      color:        #00ffcc88;
+      font-size:    12px;
+      line-height:  12px;
+      text-align:   center;
+      cursor:       pointer;
+      padding:      0;
+      font-family:  monospace;
+      transition:   all .15s;
+    }
+    .map-zoom-btn:hover {
+      background:  rgba(0,255,204,0.20);
+      border-color:#00ffcc;
+      color:       #00ffcc;
     }
 
     /* mission panel */
@@ -578,11 +648,23 @@
     </div>
 
     <!-- Bottom Right - Minimap -->
+    <!-- ── TACTICAL MAP ── -->
     <div id="hud-br">
-      <div id="minimap">
-        <canvas id="minimap-canvas" width="150" height="150"></canvas>
+      <div id="minimap-wrap">
+
+        <!-- Circular radar canvas -->
+        <div id="minimap">
+          <canvas id="minimap-canvas" width="150" height="150"></canvas>
+        </div>
+
+        <!-- Zoom controls -->
+        <div id="minimap-zoom">
+          <button class="map-zoom-btn" id="map-zoom-in"  title="Zoom In" >+</button>
+          <button class="map-zoom-btn" id="map-zoom-out" title="Zoom Out">−</button>
+        </div>
+
       </div>
-      <div id="minimap-label">TACTICAL MAP</div>
+      <div id="minimap-label">◈ TACTICAL MAP ◈</div>
     </div>
 
     <!-- Camera mode -->
