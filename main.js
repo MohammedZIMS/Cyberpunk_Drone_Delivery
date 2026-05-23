@@ -29,6 +29,10 @@ import { ExplosionFX }        from './src/game/ExplosionFX.js';
 import { AudioManager }       from './src/audio/AudioManager.js';
 import { ScreenManager }      from './src/ui/ScreenManager.js';
 import { TacticalMap }        from './src/ui/tactical/TacticalMap.js';
+import { HealthSystem }       from './src/systems/HealthSystem.js';
+import { ScoreManager }       from './src/systems/ScoreManager.js';
+import { PlayTimeTracker }    from './src/systems/PlayTimeTracker.js';
+import { GameOverManager }    from './src/systems/GameOverManager.js';
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
@@ -93,8 +97,11 @@ async function init() {
   const fog      = new FogVolume();
 
   // ── Core game systems ──────────────────────────────────────────────────
-  const score    = new ScoreSystem();
-  const camera   = new Camera(canvas);
+  const score      = new ScoreManager();
+  const health     = new HealthSystem();
+  const playTime   = new PlayTimeTracker();
+  const gameOver   = new GameOverManager();
+  const camera     = new Camera(canvas);
 
   // ── Tactical Map — created once, persists across restarts ─────────────
   // FIX: canvas.getContext('2d') was never called in the original code.
@@ -104,6 +111,10 @@ async function init() {
     city.buildings,
     { worldRadius: 260, canvasSize: 150 }
   );
+
+  // ── GameOver screen button wiring ─────────────────────────────────────
+  gameOver.onRestart  = () => { startSession(); };
+  gameOver.onMainMenu = () => { screen.showStart(score.getHighScore()); };
 
   // Wire zoom buttons
   document.getElementById('map-zoom-in')?.addEventListener('click', () => {
@@ -147,6 +158,11 @@ async function init() {
   // ─────────────────────────────────────────────────────────────────────────
 
   function startSession() {
+    // Reset per-session systems
+    score.reset();
+    health.reset();
+    playTime.start();
+
     // Create fresh session objects
     gameState  = new GameState(city.buildings, score);
     drone      = new Drone();
@@ -156,29 +172,81 @@ async function init() {
     const detector = new CollisionDetector(city.buildings);
     detector.setObstacles(obstacles.getCars(), obstacles.getWires(), obstacles.getBillboards());
 
-    controller = new DroneController(drone, detector);
+    // DroneController now takes HealthSystem instead of old damage callback
+    controller = new DroneController(drone, detector, health);
 
-    // Wire DroneController → GameState for damage
-    controller.onDamage = (dmg) => gameState.applyDamage(dmg);
-    controller.onHit    = ()    => { screen.flashHit(); audio.playHit(); };
+    // Hit FX callback
+    controller.onHit = (type) => {
+      screen.flashHit();
+      audio.playHit();
+      // Notify ScoreManager that mission is no longer clean
+      score.onCollision();
+    };
 
-    // Wire GameState death callback
-    gameState.onDeath = () => {
+    // ── HealthSystem callbacks ────────────────────────────────────────
+    health.onDamage = (amt, type) => {
+      // Damage feedback handled by hit flash
+    };
+
+    health.onDeath = () => {
+      playTime.stop();
       explosion.trigger(drone.getPosition());
       audio.playExplosion();
+      gameState.isPlaying = false;
+      gameState.isAlive   = false;
+
       setTimeout(() => {
-        screen.showDead(
-          score.getScore(),
-          score.getDeliveries(),
-          score.getHighScore()
-        );
-        screen.onRestartClick(() => {
-          score.reset();
-          startSession();
-          screen.startPlaying();
+        gameOver.show({
+          score:       score.getScore(),
+          highScore:   score.getHighScore(),
+          deliveries:  score.getDeliveries(),
+          pickups:     score.getPickups(),
+          activeTime:  playTime.getActiveTime(),
+          totalTime:   playTime.getTotalTime(),
+          maxSpeed:    playTime.getMaxSpeed(),
+          distance:    playTime.getDistance(),
+          wave:        gameState.getWave(),
         });
       }, 1800);
     };
+
+    health.onPkgDamage = (amt, newCond) => {
+      // Flash the package icon red briefly
+    };
+
+    health.onPkgFail = () => {
+      // Package destroyed — notify mission
+      // pkg fail toast
+      mission._spawnMission();
+      health.resetPackage();
+    };
+
+    // ── Mission callbacks ─────────────────────────────────────────────
+    mission._onSpawn = (pickupPos, dropoffPos) => {
+      score.onMissionSpawn(playTime.getActiveTime());
+    };
+
+    mission.onDeliver((timeLeft, timeLimit, approachSpeed, weatherName) => {
+      // Dropoff score
+      const result = score.recordDelivery(
+        timeLeft, timeLimit,
+        health.getPkgCondition(),
+        approachSpeed,
+        weatherName
+      );
+      screen.showScorePopup(result.earned);
+
+      // Reset package for next mission
+      health.resetPackage();
+      health.setCarryingPackage(false);
+    });
+
+    mission.onFail(() => {
+      score.resetStreak();
+    });
+
+    // Wire GameState death callback (legacy — now HealthSystem handles death)
+    gameState.onDeath = () => {};
 
     // Spawn delivery targets
     spawnTargets(3);
@@ -214,10 +282,11 @@ async function init() {
     if (nowPaused) {
       audio.pauseAll();
       screen.showPause();
+      playTime.pause();
     } else {
       audio.resumeAll();
       screen.hidePause();
-      // Re-stamp last so dt doesn't spike after being paused
+      playTime.resume();
       last = performance.now();
     }
   }
@@ -277,9 +346,10 @@ async function init() {
     const velocity = drone.getVelocity();
     const hSpeed   = Math.hypot(velocity[0], velocity[2]);
 
+    // ── Health system cooldown ─────────────────────────────────────────
+    health.update(dt);
+
     // ── Physics ───────────────────────────────────────────────────────
-    // FIX: was `controller.physics?.applyWind` which always resolved to
-    // undefined. DroneController doesn't own physics — Drone does.
     drone.physics.applyWind(windForce);
     controller.update(dt, input);
 
@@ -295,29 +365,30 @@ async function init() {
     camera.follow(dronePos, drone.getYaw(), dt);
 
     // ── Mission ───────────────────────────────────────────────────────
-    mission.update(dt, dronePos, weatherState);
+    mission.update(dt, dronePos, velocity, weatherState);
 
     // ── GameState timer & wave ────────────────────────────────────────
     gameState.update(dt, weatherState);
 
-    // ── Delivery targets ──────────────────────────────────────────────
+    // ── PlayTime tracking ─────────────────────────────────────────────
+    const distDt = Math.hypot(velocity[0], velocity[2]) * dt;
+    playTime.update(dt, Math.hypot(...velocity), distDt);
+
+    // ── Mission pickup state → package carrying ────────────────────────
+    health.setCarryingPackage(mission.getState() === 'transit');
+
+    // ── Delivery targets (visual pads only — scoring via mission callbacks) ─
     for (let i = 0; i < deliveryTargets.length; i++) {
       const target = deliveryTargets[i];
       const collected = target.update(dt, dronePos, velocity);
-
       if (collected) {
-        // FIX: score recorded ONCE via GameState — not here AND in a later
-        // block. GameState.deliverParcel() is idempotent on repeat calls.
-        const result = gameState.deliverParcel(i, weatherState);
-        if (result) {
-          explosion.trigger(target.getPosition());
-          audio.playDelivery();
-          screen.showScorePopup(result.earned);
-        }
+        // Pad collected — score fires via mission.onDeliver callback above.
+        explosion.trigger(target.getPosition());
+        audio.playDelivery();
       }
     }
 
-    // Respawn wave when all delivered (wave timer managed by GameState)
+    // Respawn wave when all delivered
     const allDelivered = deliveryTargets.every(t => t.getState() === 'collected');
     if (allDelivered) {
       spawnTargets(Math.min(3 + gameState.getWave() - 1, 8));
@@ -342,13 +413,18 @@ async function init() {
       speed,
       weather:       weatherState,
       wind:          isFinite(windStrength) ? windStrength : 0,
-      hp:            gameState.getHP(),
+      hp:            health.getHP(),
       score:         score.getScore(),
       highScore:     score.getHighScore(),
-      streak:        score.getStreak(),
+      streak:        score.getMult(),
       mission:       mission.getState(),
-      timeRemaining: gameState.getTimeRemaining(),
-      yaw:           drone.getYaw(),   // compass always has a fresh value
+      timeRemaining: mission.getTimeRemaining(),
+      timerWarning:  mission.getWarningLevel(),
+      yaw:           drone.getYaw(),
+      // New fields:
+      pkgCondition:  health.getPkgCondition(),
+      playTime:      playTime.getFormattedActive(),
+      boosting:      drone.physics.isBoosting(),
     });
 
     // ── Tactical Map — updated EVERY active frame ─────────────────────

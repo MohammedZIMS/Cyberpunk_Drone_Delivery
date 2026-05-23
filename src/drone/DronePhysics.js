@@ -1,15 +1,15 @@
 // Physics constants (tune to taste)
 const GRAVITY         =  9.8;   // m/s²
-const THRUST_FORCE    = 20.0;   // N upward (must exceed gravity to climb)
-const STRAFE_FORCE    =  9.0;   // N horizontal
-const YAW_SPEED       =  2.2;   // rad/s
-const LINEAR_DRAG     =  2.8;   // velocity damping coefficient
-const ANGULAR_DRAG    =  7.0;   // yaw damping
-const MAX_H_SPEED     = 22;     // m/s horizontal cap
-const MAX_V_SPEED     = 16;     // m/s vertical cap
+const THRUST_FORCE    = 28.0;   // was 20 — faster climb   // N upward (must exceed gravity to climb)
+const STRAFE_FORCE    = 16.0;   // was 9 — snappier horizontal   // N horizontal
+const YAW_SPEED       =  3.2;   // was 2.2 — tighter turns   // rad/s
+const LINEAR_DRAG     =  2.2;   // was 2.8 — less drag = faster   // velocity damping coefficient
+const ANGULAR_DRAG    =  5.5;   // was 7.0 — snappier yaw   // yaw damping
+const MAX_H_SPEED     = 38;     // was 22 — much faster top speed     // m/s horizontal cap
+const MAX_V_SPEED     = 24;     // was 16 — faster climb/dive     // m/s vertical cap
 const MAX_TILT        =  0.34;  // radians (~20°) visual tilt limit
 const TILT_SPEED      =  6.0;   // how fast the visual tilt catches up
-const WIND_MASS       =  3.5;   // effective drone mass for wind (lower = more wind effect)
+const WIND_MASS       =  4.5;   // was 3.5 — slightly less wind effect at high speed   // effective drone mass for wind (lower = more wind effect)
 
 export class DronePhysics {
   constructor() {
@@ -27,6 +27,9 @@ export class DronePhysics {
 
     // Pending wind force injected from the outside
     this._pendingWind = null;
+
+    // Boosting flag
+    this._boosting = false;
   }
 
   // External API
@@ -73,7 +76,16 @@ export class DronePhysics {
       this._pendingWind = null;
     }
 
-    // 6. Emergency hover
+    // 6. Speed boost (Shift key)
+    const boosting = input.isDown('ShiftLeft') || input.isDown('ShiftRight');
+    if (boosting) {
+      // Boost: amplify current horizontal acceleration by 2.4×
+      this.acceleration[0] *= 2.4;
+      this.acceleration[2] *= 2.4;
+    }
+    this._boosting = boosting;
+
+    // 6b. Emergency hover
     if (input.isDown('Space')) {
       this.velocity[0] *= 0.85;
       this.velocity[1] *= 0.85;
@@ -86,7 +98,7 @@ export class DronePhysics {
     this.velocity[2] += this.acceleration[2] * dt;
 
     // 8. Linear drag  v *= (1 - drag * dt)
-    const drag = Math.pow(1 - LINEAR_DRAG * dt, 1);
+    const drag = 1 - LINEAR_DRAG * dt;
     this.velocity[0] *= drag;
     this.velocity[1] *= drag * 0.9;  // slightly more vertical damping
     this.velocity[2] *= drag;
@@ -121,5 +133,9 @@ export class DronePhysics {
       pitchTilt: this.pitchTilt,
       rollTilt:  this.rollTilt,
     };
+  }
+
+  isBoosting() {
+    return this._boosting || false;
   }
 }

@@ -1,3 +1,4 @@
+import { MissionTimer } from '../systems/MissionTimer.js';
 import { mat4 } from 'https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js';
 
 const PICKUP_RADIUS  = 5.0;   // metres — how close to trigger pickup
@@ -17,8 +18,9 @@ export class MissionManager {
     this.pickupPos    = null;
     this.dropoffPos   = null;
     this.missionTimer = 0;
-    this.timeLimit    = 60;       // seconds per delivery
+    this.timeLimit    = 120;      // now managed by MissionTimer
     this._flashTimer  = 0;
+    this._missionTimerSys = new MissionTimer();
     this._onDeliver   = null;     // callback(timeRemaining, weatherState)
     this._onFail      = null;
 
@@ -30,6 +32,7 @@ export class MissionManager {
 
   onDeliver(fn) { this._onDeliver = fn; }
   onFail(fn)    { this._onFail    = fn; }
+  onSpawn(fn)   { this._onSpawn   = fn; }
 
   // Spawn
 
@@ -39,7 +42,10 @@ export class MissionManager {
     this.dropoffPos = [picks[1].x, picks[1].height + 0.5, picks[1].z];
     this.state        = 'pickup';
     this.missionTimer = 0;
-    this.timeLimit    = 60;
+    // Use MissionTimer for distance-scaled time limit
+    this._missionTimerSys.startMission(this.pickupPos, this.dropoffPos);
+    this.timeLimit = this._missionTimerSys.getLimit();
+    if (this._onSpawn) this._onSpawn(this.pickupPos, this.dropoffPos);
   }
 
   _randomPair() {
@@ -57,16 +63,17 @@ export class MissionManager {
 
   // Per-frame
 
-  update(dt, dronePos, weatherState) {
+  update(dt, dronePos, droneVel, weatherState) {
     this._phase      += dt * 2.5;
     this._flashTimer  = Math.max(0, this._flashTimer - dt);
 
     if (this.state === 'idle') return;
 
-    this.missionTimer += dt;
+    this._missionTimerSys.update(dt);
+    this.missionTimer = this._missionTimerSys.getElapsed();
 
     // Time limit exceeded
-    if (this.missionTimer > this.timeLimit) {
+    if (!this._missionTimerSys.isRunning() && this.missionTimer > 0) {
       if (this._onFail) this._onFail('timeout');
       this._spawnMission();
       return;
@@ -87,9 +94,10 @@ export class MissionManager {
     if (this.state === 'transit' && dist(this.dropoffPos) < DROPOFF_RADIUS) {
       this.state       = 'done';
       this._flashTimer = 1.5;
-      const timeLeft   = Math.max(0, this.timeLimit - this.missionTimer);
-      if (this._onDeliver) this._onDeliver(timeLeft, weatherState);
-      // Spawn next mission after short celebration pause
+      this._missionTimerSys.stop();
+      const timeLeft   = this._missionTimerSys.getRemaining();
+      const approachSpeed = Math.hypot(droneVel[0]||0, droneVel[1]||0, droneVel[2]||0);
+      if (this._onDeliver) this._onDeliver(timeLeft, this.timeLimit, approachSpeed, weatherState);
       setTimeout(() => this._spawnMission(), 1800);
     }
   }
@@ -141,7 +149,9 @@ export class MissionManager {
 
   // Accessors for HUD
   getState()        { return this.state; }
-  getTimeRemaining(){ return Math.max(0, this.timeLimit - this.missionTimer); }
+  getTimeRemaining(){ return this._missionTimerSys.getRemaining(); }
+  getTimeFraction() { return this._missionTimerSys.getFraction(); }
+  getWarningLevel() { return this._missionTimerSys.getWarningLevel(); }
   getPickupPos()    { return this.pickupPos; }
   getDropoffPos()   { return this.dropoffPos; }
 }

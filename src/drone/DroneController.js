@@ -1,21 +1,23 @@
-const BOUNCE_RESTITUTION = 0.3;
-const DAMAGE_PER_HIT     = 20;
-const HIT_FLASH_DUR      = 0.9; // seconds
+// DroneController.js
+// Wires drone physics → collision detection → HealthSystem.
+// No longer owns damage constants — delegates to HealthSystem.
+
+const BOUNCE_RESTITUTION = 0.28;
 
 export class DroneController {
-  constructor(drone, collisionDetector) {
-    this.drone    = drone;
-    this.detector = collisionDetector;
+  constructor(drone, collisionDetector, healthSystem) {
+    this.drone      = drone;
+    this.detector   = collisionDetector;
+    this.health     = healthSystem;   // HealthSystem instance
 
-    /** Callback(damageAmount) — wired to GameState.applyDamage by main.js */
-    this.onDamage = null;
-    /** Callback() — fires once when a damaging hit occurs (for FX/audio) */
-    this.onHit    = null;
+    /** Callback() — fires on any damaging collision (for FX/audio) */
+    this.onHit = null;
 
-    this._hitFlash = 0;
+    this._hitFlash   = 0;
+    this._flashDur   = 0.7;
   }
 
-  // ── Per-frame ─────────────────────────────────────────────────────────────
+  // ── Per-frame ─────────────────────────────────────────────────────────
 
   update(dt, input) {
     this.drone.update(dt, input);
@@ -31,7 +33,7 @@ export class DroneController {
       pos[1] += result.push[1];
       pos[2] += result.push[2];
 
-      // Reflect velocity (mirror + damping)
+      // Bounce velocity
       const vDotN = vel[0]*result.normal[0]
                   + vel[1]*result.normal[1]
                   + vel[2]*result.normal[2];
@@ -43,15 +45,16 @@ export class DroneController {
       vel[1] *= BOUNCE_RESTITUTION;
       vel[2] *= BOUNCE_RESTITUTION;
 
-      if (result.isDamaging) {
-        this._hitFlash = HIT_FLASH_DUR;
-        if (this.onDamage) this.onDamage(DAMAGE_PER_HIT);
-        if (this.onHit)    this.onHit();
+      // Delegate ALL damage logic to HealthSystem (handles cooldown, pkg, type)
+      const didDamage = this.health.processCollision(result);
+      if (didDamage) {
+        this._hitFlash = 1.0;
+        if (this.onHit) this.onHit(result.obstacleType);
       }
     }
 
     if (this._hitFlash > 0) {
-      this._hitFlash = Math.max(0, this._hitFlash - dt / HIT_FLASH_DUR);
+      this._hitFlash = Math.max(0, this._hitFlash - dt / this._flashDur);
     }
   }
 
