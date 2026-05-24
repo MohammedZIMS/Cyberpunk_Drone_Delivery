@@ -25,6 +25,7 @@ import { DeliveryTarget }     from './src/game/DeliveryTarget.js';
 import { MissionManager }     from './src/game/MissionManager.js';
 import { ScoreSystem }        from './src/game/ScoreSystem.js';
 import { ExplosionFX }        from './src/game/ExplosionFX.js';
+import { PickupEffect }       from './src/game/PickupEffect.js';
 
 import { AudioManager }       from './src/audio/AudioManager.js';
 import { ScreenManager }      from './src/ui/ScreenManager.js';
@@ -114,7 +115,7 @@ async function init() {
 
   // ── GameOver screen button wiring ─────────────────────────────────────
   gameOver.onRestart  = () => { startSession(); };
-  gameOver.onMainMenu = () => { screen.showStart(score.getHighScore()); };
+  gameOver.onMainMenu = () => { screen.showMainMenu(score.getHighScore()); };
 
   // Wire zoom buttons
   document.getElementById('map-zoom-in')?.addEventListener('click', () => {
@@ -126,14 +127,52 @@ async function init() {
     tacticalMap.setZoom(z);
   });
 
-  // ── Show start screen ──────────────────────────────────────────────────
-  screen.showStart(score.getHighScore());
+  // ── Show main menu ───────────────────────────────────────────────────────
+  screen.showMainMenu(score.getHighScore());
 
   // ── Pause menu button wiring (done once; callbacks set per session) ────
   screen.bindPauseButtons({
     onResume:   () => resumeGame(),
     onRestart:  () => { resumeGame(); startSession(); },
-    onMainMenu: () => { resumeGame(); screen.showStart(score.getHighScore()); },
+    onMainMenu: () => { resumeGame(); screen.showMainMenu(score.getHighScore()); },
+  });
+
+  // ── Continue Game callback ─────────────────────────────────────────────
+  screen.onContinueGame((savedData) => {
+    // Restore a saved session snapshot (basic: just restart for now)
+    startSession();
+  });
+
+  // ── Game speed callback ────────────────────────────────────────────────
+  screen.onSpeedChange((speed) => {
+    // gameSpeed is read in the loop via screen.getGameSpeed()
+  });
+
+  // ── Audio change callback ──────────────────────────────────────────────
+  screen.onAudioChange((settings) => {
+    if (!audio._ready) return;
+    const mv = settings.muted ? 0 : settings.masterVol;
+    if (audio._masterGain) {
+      audio._masterGain.gain.setTargetAtTime(mv, audio._ctx.currentTime, 0.05);
+    }
+    if (audio._droneGain) {
+      audio._droneGain.gain.setTargetAtTime(
+        settings.muted ? 0 : settings.droneVol * 0.35,
+        audio._ctx.currentTime, 0.05
+      );
+    }
+    if (audio._rainGain) {
+      audio._rainGain.gain.setTargetAtTime(
+        settings.muted ? 0 : settings.rainVol * 0.25,
+        audio._ctx.currentTime, 0.05
+      );
+    }
+    if (audio._windGain) {
+      audio._windGain.gain.setTargetAtTime(
+        settings.muted ? 0 : settings.windVol * 0.2,
+        audio._ctx.currentTime, 0.05
+      );
+    }
   });
 
   // ── ESC / P key toggles pause ─────────────────────────────────────────
@@ -150,6 +189,7 @@ async function init() {
   let controller = null;
   let mission    = null;
   let explosion  = null;
+  let pickupFX   = null;   // PickupEffect — 2D overlay particle burst
   let deliveryTargets = [];
   let last = 0;
 
@@ -158,6 +198,8 @@ async function init() {
   // ─────────────────────────────────────────────────────────────────────────
 
   function startSession() {
+    // Re-register start callback so menu "Start Mission" works after game-over
+    screen.onStartClick(() => startSession());
     // Reset per-session systems
     score.reset();
     health.reset();
@@ -168,6 +210,21 @@ async function init() {
     drone      = new Drone();
     explosion  = new ExplosionFX(gl);
     mission    = new MissionManager(city.buildings);
+
+    // ── Pickup effect overlay (2D canvas on top of WebGL) ─────────────
+    // Reuse existing overlay canvas or create one once
+    let overlayCanvas = document.getElementById('pickup-fx-canvas');
+    if (!overlayCanvas) {
+      overlayCanvas = document.createElement('canvas');
+      overlayCanvas.id = 'pickup-fx-canvas';
+      overlayCanvas.style.cssText =
+        'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;';
+      canvas.parentElement?.appendChild(overlayCanvas);
+    }
+    overlayCanvas.width  = canvas.width;
+    overlayCanvas.height = canvas.height;
+    const overlay2d = overlayCanvas.getContext('2d');
+    pickupFX = new PickupEffect(overlay2d, camera);
 
     const detector = new CollisionDetector(city.buildings);
     detector.setObstacles(obstacles.getCars(), obstacles.getWires(), obstacles.getBillboards());
@@ -225,6 +282,38 @@ async function init() {
     mission._onSpawn = (pickupPos, dropoffPos) => {
       score.onMissionSpawn(playTime.getActiveTime());
     };
+
+    // ── Package pickup reward ─────────────────────────────────────────
+    // Fires exactly once per package (pickupSuccess guard is in MissionManager)
+    mission.onPickup((pickupPos) => {
+      // 1. Score: +50 immediate pickup bonus (separate from ScoreManager's
+      //    recordPickup which fires on the same event — we add a flat 50
+      //    and let recordPickup handle the speed bonus on top)
+      const PICKUP_FLAT = 50;
+      score.score += PICKUP_FLAT;   // direct add — instant, no streak multiplier
+
+      // 2. ScoreManager recordPickup (speed bonus + pickups counter)
+      const { earned: speedEarned } = score.recordPickup(playTime.getActiveTime());
+
+      // 3. Animated popup: "+50 PACKAGE PICKUP"
+      screen.showPickupPopup(PICKUP_FLAT, 'PACKAGE PICKUP');
+
+      // 4. HUD score flash
+      screen.flashScore();
+
+      // 5. Small HUD notification
+      screen.showHUDNotification('◈  PACKAGE SECURED  ◈', '#ffcc00');
+
+      // 6. Pickup sound
+      audio.playPickup();
+
+      // 7. 2D neon ring + particle burst at pickup world position
+      if (pickupFX && pickupPos) pickupFX.trigger(pickupPos);
+
+      // 8. Update HUD score immediately
+      const scoreEl = document.getElementById('score-val');
+      if (scoreEl) scoreEl.textContent = score.getScore();
+    });
 
     mission.onDeliver((timeLeft, timeLimit, approachSpeed, weatherName) => {
       // Dropoff score
@@ -306,7 +395,8 @@ async function init() {
 
     // FIX: always advance `last` so the timestamp never goes stale,
     // even on paused frames. This prevents a dt spike on resume.
-    const dt = Math.min((t - last) / 1000, 0.05);
+    const _rawDt = Math.min((t - last) / 1000, 0.05);
+    const dt = _rawDt * (screen.getGameSpeed ? screen.getGameSpeed() : 1.0);
     last = t;
 
     // ── Weather always updates (visual only, no gameplay impact) ──────
@@ -358,6 +448,7 @@ async function init() {
     rain.update(dt, weather.getParticleCount());
     fog.update(dt, weather.getFogDensity());
     explosion.update(dt);
+    if (pickupFX) pickupFX.update(dt);
 
     // ── Camera — runs every active frame, independent of weather ─────
     // FIX: camera.follow() was only called when `alive` was true locally.
@@ -480,9 +571,21 @@ async function init() {
     // Particle effects
     rain.draw(camera, dronePos, weather.getWindForce(), 18);
     if (explosion) explosion.draw(camera);
+
+    // 2D overlay: pickup neon ring + particles
+    if (pickupFX) {
+      const ov = document.getElementById('pickup-fx-canvas');
+      if (ov) {
+        const ctx2d = ov.getContext('2d');
+        ctx2d.clearRect(0, 0, ov.width, ov.height);
+        pickupFX.draw();
+      }
+    }
   }
 
   // ── Entry point ──────────────────────────────────────────────────────────
+  // onStartClick is consumed once per use; re-register after each session end
+  // is handled inside startSession via re-calling screen.onStartClick
   screen.onStartClick(() => startSession());
 }
 

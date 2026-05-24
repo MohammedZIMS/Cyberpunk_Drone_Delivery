@@ -64,4 +64,34 @@ export class Camera {
     mat4.perspective(m, this.fovRad, this.aspect, this.near, this.far);
     return m;
   }
+
+  /**
+   * Project a world-space position to 2-D screen coordinates.
+   * Returns { x, y } in canvas pixels, or null if behind the camera.
+   */
+  worldToScreen(worldPos) {
+    const view = this.getViewMatrix();
+    const proj = this.getProjectionMatrix();
+
+    // World → clip space
+    const clip = mat4.create();
+    mat4.multiply(clip, proj, view);
+
+    const wp  = [worldPos[0], worldPos[1], worldPos[2], 1.0];
+    const out  = [0, 0, 0, 0];
+    for (let r = 0; r < 4; r++) {
+      out[r] = clip[r]*wp[0] + clip[r+4]*wp[1] + clip[r+8]*wp[2] + clip[r+12]*wp[3];
+    }
+
+    if (out[3] <= 0) return null;   // behind camera
+
+    // NDC → pixel
+    const ndcX = out[0] / out[3];
+    const ndcY = out[1] / out[3];
+    const cvs  = { w: window.innerWidth, h: window.innerHeight };
+    return {
+      x: (ndcX * 0.5 + 0.5) * cvs.w,
+      y: (1 - (ndcY * 0.5 + 0.5)) * cvs.h,
+    };
+  }
 }

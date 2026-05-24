@@ -23,6 +23,8 @@ export class MissionManager {
     this._missionTimerSys = new MissionTimer();
     this._onDeliver   = null;     // callback(timeRemaining, weatherState)
     this._onFail      = null;
+    this._onPickup    = null;     // callback() — fires once per pickup
+    this._pickupSuccess = false;  // guard: prevents duplicate pickup reward
 
     // Pulsing animation phase
     this._phase = 0;
@@ -30,9 +32,10 @@ export class MissionManager {
     this._spawnMission();
   }
 
-  onDeliver(fn) { this._onDeliver = fn; }
-  onFail(fn)    { this._onFail    = fn; }
-  onSpawn(fn)   { this._onSpawn   = fn; }
+  onDeliver(fn)  { this._onDeliver  = fn; }
+  onFail(fn)     { this._onFail     = fn; }
+  onSpawn(fn)    { this._onSpawn    = fn; }
+  onPickup(fn)   { this._onPickup   = fn; }
 
   // Spawn
 
@@ -42,6 +45,7 @@ export class MissionManager {
     this.dropoffPos = [picks[1].x, picks[1].height + 0.5, picks[1].z];
     this.state        = 'pickup';
     this.missionTimer = 0;
+    this._pickupSuccess = false;  // reset pickup reward guard for new mission
     // Use MissionTimer for distance-scaled time limit
     this._missionTimerSys.startMission(this.pickupPos, this.dropoffPos);
     this.timeLimit = this._missionTimerSys.getLimit();
@@ -89,6 +93,11 @@ export class MissionManager {
     if (this.state === 'pickup' && dist(this.pickupPos) < PICKUP_RADIUS) {
       this.state       = 'transit';
       this._flashTimer = 0.8;
+      // Fire pickup reward exactly once per package
+      if (!this._pickupSuccess) {
+        this._pickupSuccess = true;
+        if (this._onPickup) this._onPickup(this.pickupPos);
+      }
     }
 
     if (this.state === 'transit' && dist(this.dropoffPos) < DROPOFF_RADIUS) {

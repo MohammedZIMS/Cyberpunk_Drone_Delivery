@@ -344,6 +344,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      transition: filter 0.3s;
     }
 
     #pkg-icon {
@@ -355,12 +356,29 @@
       justify-content: center;
       font-size: 12px;
       color: #ffcc00;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+
+    /* CARRYING state: neon glow around package indicator */
+    #pkg-panel.pkg-carrying #pkg-icon {
+      border-color: #00ffcc;
+      box-shadow: 0 0 12px #00ffcc, 0 0 24px #00ffcc66;
+      animation: pkgPulse 1.2s ease-in-out infinite;
+    }
+    #pkg-panel.pkg-carrying #pkg-text {
+      color: #00ffcc;
+      text-shadow: 0 0 8px #00ffcc;
+    }
+    @keyframes pkgPulse {
+      0%,100% { box-shadow: 0 0 12px #00ffcc, 0 0 24px #00ffcc66; }
+      50%     { box-shadow: 0 0 20px #00ffcc, 0 0 40px #00ffccaa; }
     }
 
     #pkg-text {
       font-size: 10px;
       letter-spacing: 2px;
       color: #ffcc0088;
+      transition: color 0.3s, text-shadow 0.3s;
     }
 
     /* compass */
