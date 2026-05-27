@@ -29,6 +29,7 @@ import { PickupEffect }       from './src/game/PickupEffect.js';
 
 import { AudioManager }       from './src/audio/AudioManager.js';
 import { ScreenManager }      from './src/ui/ScreenManager.js';
+import { Tutorial }           from './src/ui/Tutorial.js';
 import { TacticalMap }        from './src/ui/tactical/TacticalMap.js';
 import { HealthSystem }       from './src/systems/HealthSystem.js';
 import { ScoreManager }       from './src/systems/ScoreManager.js';
@@ -44,6 +45,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 const { gl, canvas } = initWebGL('glCanvas');
 const renderer = new Renderer(gl, canvas);
 const screen   = new ScreenManager();
+const tutorial = new Tutorial();
 const input    = new InputManager();
 const audio    = new AudioManager();
 
@@ -90,7 +92,7 @@ async function init() {
 
   const ground     = new Ground(3000);
   const roadGrid   = new RoadGrid(3000, 25);
-  const obstacles  = new ObstacleManager(city.buildings);
+  const obstacles  = new ObstacleManager(city.buildings, gl, program);
 
   // ── Weather (persistent — transitions should never reset) ──────────────
   const weather  = new WeatherSystem();
@@ -137,10 +139,13 @@ async function init() {
     onMainMenu: () => { resumeGame(); screen.showMainMenu(score.getHighScore()); },
   });
 
-  // ── Continue Game callback ─────────────────────────────────────────────
-  screen.onContinueGame((savedData) => {
-    // Restore a saved session snapshot (basic: just restart for now)
-    startSession();
+  // ── Tutorial button callback ───────────────────────────────────────────────
+  screen.onTutorial(() => {
+    tutorial.show();
+    tutorial.onClose(() => {
+      // "START MISSION" inside the tutorial kicks off a fresh session
+      startSession();
+    });
   });
 
   // ── Game speed callback ────────────────────────────────────────────────
@@ -180,6 +185,10 @@ async function init() {
     const key = e.key.toLowerCase();
     if ((key === 'escape' || key === 'p') && gameState?.isPlaying) {
       togglePause();
+    }
+    // H — toggle the HOW TO FLY panel during active play or pause
+    if (key === 'h' && gameState) {
+      tutorial.toggle();
     }
   });
 

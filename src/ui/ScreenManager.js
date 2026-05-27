@@ -8,7 +8,6 @@ export class ScreenManager {
   constructor() {
     this._state        = 'mainMenu'; // mainMenu | playing | paused | dead
     this._menuSection  = 'main';     // main | settings | audio | tacticalMap | exitConfirm
-    this._savedSession = null;       // for Continue Game
     this._gameSpeed    = 1.0;        // gameplay speed multiplier
     this._audioSettings = {
       masterVol : 0.6,
@@ -31,16 +30,6 @@ export class ScreenManager {
   getGameSpeed()     { return this._gameSpeed; }
   getAudioSettings() { return { ...this._audioSettings }; }
   get isMuted()      { return this._audioSettings.muted; }
-
-  saveSession(data) {
-    this._savedSession = data;
-    this._updateContinueBtn();
-  }
-
-  clearSession() {
-    this._savedSession = null;
-    this._updateContinueBtn();
-  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // State transitions
@@ -229,8 +218,6 @@ export class ScreenManager {
       pauseMainMenuBtn: $('btn-pause-main-menu'),
       // Dead screen
       restartBtn     : $('btn-restart'),
-      // Continue btn
-      continueBtn    : $('btn-continue'),
     };
   }
 
@@ -262,12 +249,6 @@ export class ScreenManager {
     });
   }
 
-  _updateContinueBtn() {
-    if (!this._els.continueBtn) return;
-    this._els.continueBtn.disabled = !this._savedSession;
-    this._els.continueBtn.style.opacity = this._savedSession ? '1' : '0.35';
-  }
-
   _bindMenuNav() {
     // Delegated click handling for all menu sections
     document.addEventListener('click', e => {
@@ -293,16 +274,13 @@ export class ScreenManager {
     switch (action) {
       case 'start-mission':
         if (this._startMissionCb) {
-          this.clearSession();
           this._startMissionCb();
           this._startMissionCb = null; // consumed; re-set by main.js each session
         }
         break;
 
-      case 'continue-game':
-        if (this._savedSession && this._continueCb) {
-          this._continueCb(this._savedSession);
-        }
+      case 'open-tutorial':
+        if (this._tutorialCb) this._tutorialCb();
         break;
 
       case 'open-settings':
@@ -378,8 +356,8 @@ export class ScreenManager {
     }
   }
 
-  // Allow main.js to register continue callback
-  onContinueGame(fn)  { this._continueCb = fn; }
+  // Allow main.js to register tutorial callback
+  onTutorial(fn)      { this._tutorialCb = fn; }
   onSpeedChange(fn)   { this._speedChangeCb = fn; }
   onAudioChange(fn)   { this._audioChangeCb = fn; }
 
@@ -442,8 +420,8 @@ export class ScreenManager {
           <button class="cyber-btn cyan-btn mm-item" data-action="start-mission">
             <span class="btn-icon">▶</span> START MISSION
           </button>
-          <button id="btn-continue" class="cyber-btn ghost-btn mm-item" data-action="continue-game" disabled style="opacity:0.35;">
-            <span class="btn-icon">⟳</span> CONTINUE GAME
+          <button class="cyber-btn ghost-btn mm-item" data-action="open-tutorial">
+            <span class="btn-icon">?</span> TUTORIAL
           </button>
           <button class="cyber-btn ghost-btn mm-item" data-action="open-settings">
             <span class="btn-icon">⚙</span> SETTINGS
