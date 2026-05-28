@@ -2,7 +2,12 @@
 
 A browser-based 3D drone delivery game set in a neon-lit cyberpunk city. Pilot your drone through a procedurally generated skyline, dodge flying cars and electric wires, and make deliveries before the clock runs out — all rendered with raw WebGL and Three.js.
 
-![WebGL](https://drive.google.com/file/d/1tZi1bS5AMnE2UsDvC3ZMLfg4NqkYe4LX/view?usp=drive_link) ![Three.js](https://drive.google.com/file/d/19qznB6xQ8s2iceszGSL3riqS2nBzlSrG/view?usp=drive_link) ![glMatrix](https://drive.google.com/file/d/1rvwa21YC1GnDaLFpTRcAHNQOf9gsTBje/view?usp=drive_link) ![No build step](https://drive.google.com/file/d/1tnD0p6AHXXc8p90THVXqDYeZedliknqp/view?usp=drive_link)
+<img width="400" height="309" alt="Start Screen" src="https://github.com/user-attachments/assets/759dff63-d1c4-4c75-9248-74b5eeee8a2e" />
+<img width="400" height="306" alt="Main Screen" src="https://github.com/user-attachments/assets/865660ce-07ec-46a5-8e95-14f405520c77" />
+<img width="400" height="308" alt="image" src="https://github.com/user-attachments/assets/09a7b670-4a72-4376-beaa-5a39a2204202" />
+<img width="400" height="309" alt="image" src="https://github.com/user-attachments/assets/260c511c-d8df-4668-b89a-3630c1c3a97f" />
+
+
 
 ---
 
@@ -34,12 +39,12 @@ A browser-based 3D drone delivery game set in a neon-lit cyberpunk city. Pilot y
 
 | Key | Action |
 |---|---|
-| `A ` | Thrust forward |
-| `D ` | Thrust backward |
-| `S ` | Strafe left |
-| `W ` | Strafe right |
-| `↑ ` | Ascend |
-| `↓ ` | Descend |
+| `A` | Thrust forward |
+| `D` | Thrust backward |
+| `S` | Strafe left |
+| `W` | Strafe right |
+| `↑` | Ascend |
+| `↓` | Descend |
 | `Shift` | Move Fast |
 | `← / →` | Yaw left / right |
 | `Esc / P` | Pause / resume |
