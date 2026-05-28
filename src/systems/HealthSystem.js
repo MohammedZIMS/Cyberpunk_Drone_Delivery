@@ -1,15 +1,3 @@
-// src/systems/HealthSystem.js
-// Centralised HP, damage cooldown, and collision consequence system.
-//
-// ROOT CAUSES fixed:
-//  1. DroneController applied a FLAT 20 HP per hit regardless of obstacle type.
-//     Wires, billboards and cars all dealt identical damage — wrong and unfair.
-//  2. No cooldown: a single frame of wire-overlap could fire 60 damage callbacks
-//     before the push-out resolved, draining full HP in one frame.
-//  3. Package condition was never tracked — delivery score was always max.
-//  4. "isDamaging" threshold was 4 m/s for everything, meaning low-speed
-//     brush contacts still caused full damage.
-
 // Damage table (HP lost per qualifying impact)
 export const DAMAGE_TABLE = {
   building:  20,

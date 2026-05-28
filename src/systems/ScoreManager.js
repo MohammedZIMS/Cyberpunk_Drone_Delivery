@@ -1,14 +1,3 @@
-// src/systems/ScoreManager.js
-// Replaces the flat ScoreSystem with fully separated pickup/dropoff scoring,
-// package condition bonus, speed-at-pickup bonus, and clean-run bonus.
-//
-// ROOT CAUSES fixed:
-//  1. ScoreSystem.recordDelivery() awarded score only at dropoff — pickups
-//     had no reward, making the game feel unrewarding mid-mission.
-//  2. Package condition (pkgCondition) was never factored into score at all.
-//  3. PACKAGE_SCALE reduction was never connected to damage events.
-//  4. Storm bonus was hard-coded; night/fog weather had no bonus.
-
 // ── Score constants ───────────────────────────────────────────────────────
 
 // Base points

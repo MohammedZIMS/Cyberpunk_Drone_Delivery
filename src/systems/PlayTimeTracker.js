@@ -1,7 +1,3 @@
-// src/systems/PlayTimeTracker.js
-// Tracks total session time, active gameplay time, and paused time separately.
-// All times are in seconds. Formatted output is HH:MM:SS.
-
 export class PlayTimeTracker {
   constructor() {
     this._sessionStart  = null;   // performance.now() when session began

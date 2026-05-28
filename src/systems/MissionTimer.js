@@ -1,13 +1,3 @@
-// src/systems/MissionTimer.js
-// Mission-specific countdown timer with distance-based duration scaling
-// and visual warning states.
-//
-// ROOT CAUSES fixed:
-//  1. MissionManager hard-coded timeLimit = 60s regardless of how far apart
-//     the pickup and dropoff buildings are. Short-distance missions got the
-//     same 60 s as cross-city runs, making distant deliveries feel unfair.
-//  2. No warning effects near expiry — the timer just hit 0 silently.
-
 const BASE_TIME      = 90;      // seconds — generous base for all missions
 const METERS_PER_SEC = 1.8;     // additional seconds per world-unit of distance
 const MIN_TIME       = 60;      // shortest possible mission (seconds)

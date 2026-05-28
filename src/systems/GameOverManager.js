@@ -1,7 +1,3 @@
-// src/systems/GameOverManager.js
-// Injects the Game Over overlay into the DOM and populates it with
-// final session statistics.  Fully self-contained — no WebGL dependency.
-
 import { PlayTimeTracker } from './PlayTimeTracker.js';
 
 export class GameOverManager {
